@@ -1,6 +1,10 @@
 
 export SpikeTrain, findspikes, addevent!, addcenter!, rate_bin, rate_KD
 
+#=
+Main data container of timestamps and trial data
+=#
+
 immutable event
     inds::UnitRange{Int64}
     time::Float64
@@ -77,13 +81,19 @@ function addcenter!(spikes::Array{SpikeTrain,1},center::Array{Float64,1})
     nothing
 end
 
+#=
+Rate Types
+=#
+
 abstract rate
 
+#Bin
 type rate_bin <: rate
     spikes::Array{SpikeTrain,1}
     binsize::Float64
 end
 
+#Kernel Density
 type rate_KD <: rate
     spikes::Array{SpikeTrain,1}
     binsize::Float64
@@ -97,6 +107,45 @@ type rate_KD <: rate
 
         new(spikes,binsize,kern)
     end
-    
-    
+       
 end
+
+#=
+Decoder Types
+=#
+
+abstract classifier
+
+abstract validation
+
+type decoder{C<:classifier,V<:validation}
+    response::Array{Float64,2}
+    stimulus::Array{Float64,2}
+    c::C
+    v::V
+end
+
+type LDA <: classifier 
+end
+
+type QDA <: classifier
+end
+
+type DLDA <: classifier
+end
+
+type DQDA <: classifier
+end
+
+type LeaveOne <: validation
+end
+
+type Training <: validation
+end
+
+#=
+Information Types
+=#
+
+abstract information
+
