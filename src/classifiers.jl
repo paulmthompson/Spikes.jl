@@ -1,5 +1,5 @@
 
-export fit!, validate!
+export fit!, validate!, conmatrix
 
 #=
 Maximum Liklihood
@@ -76,3 +76,34 @@ Quian Quiroga et al 2006
 #=
 Naive Bayesian
 =#
+
+#=
+General Methods
+=#
+
+function conmatrix{C<:classifier,V<:validation}(m::decoder{C,V},realval::Array{Float64,1})
+
+    classes=unique(m.stimulus)
+    inds=collect(1:length(classes))
+
+    mydict=Dict{Float64,Int64}([classes[i]=>inds[i] for i=1:length(classes)])
+
+    #y is true, x is predicted
+    #sum across columns should equal 1
+    conmat=zeros(Float64,length(classes),length(classes))
+
+    for i=1:length(realval)
+        yind=mydict[realval[i]]
+        xind=mydict[m.predict[i]]
+        conmat[yind,xind]+=1
+    end
+
+    totals=sum(conmat,2)
+    
+    for i=1:length(classes)
+        conmat[i,:]=conmat[i,:]./totals[i]
+    end
+
+    conmat
+    
+end
