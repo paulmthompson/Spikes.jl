@@ -117,10 +117,11 @@ Decoder Types
 export decoder, LDA, LeaveOne, Training
 
 abstract classifier
-
 abstract validation
+abstract bias
+abstract transformation
 
-type decoder{C<:classifier,V<:validation}
+type decoder{C<:classifier,V<:validation} <: transformation
     classes::Array{Float64,1}
     c::C
     v::V
@@ -152,5 +153,14 @@ end
 Information Types
 =#
 
-abstract information
+type Information{B<:bias,T<:transformation}
+    b::B
+    t::T
+end
+
+type QE <: bias
+end
+
+
+    
 

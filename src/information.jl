@@ -1,5 +1,5 @@
 
-export MI_bias_QE
+export MI
 
 #=
 Bias correction techniques
@@ -18,7 +18,7 @@ Plot result against 1/n_s, and fit quadratic polynomial by least squares
 Intercept is true information
 =#
 
-function MI_bias_QE{C<:classifier,V<:validation}(m::decoder{C,V},response::Array{Float64,2},stimulus::Array{Float64,1})
+function MI{B<:QE, T<:transformation}(i::Information{B,T},response::Array{Float64,2},stimulus::Array{Float64,1})
 
     N_s=length(realval)
     
@@ -28,8 +28,7 @@ function MI_bias_QE{C<:classifier,V<:validation}(m::decoder{C,V},response::Array
     
     MI=zeros(Float64,3)   
 
-    predict=project(m,response,stimulus)
-    (conmat, p_s, p_r)=conmatrix(m,predict,stimulus)
+    (conmat, p_s, p_r)=transform(i,response,stimulus)
 
     MI[1]=mutual_information(conmat,p_s,p_r)
 
@@ -39,9 +38,8 @@ function MI_bias_QE{C<:classifier,V<:validation}(m::decoder{C,V},response::Array
 
         stimulus_2=stimulus[theseinds]
         response_2=response[theseinds,:]
-        predict_2=project(m,response_2,stimulus_2)
         
-        (conmat2, p_s2, p_r2)=conmatrix(m,predict_2,stimulus_2)
+        (conmat2, p_s2, p_r2)=transform(i,response_2,stimulus_2)
 
         MI[i]=mutual_information(conmat2,p_s2,p_r2)
 
@@ -78,6 +76,11 @@ function mutual_information(p_rs::Array{Float64,2},p_s::Array{Float64,1},p_r::Ar
 
     MI
     
+end
+
+function transform{B<:bias,T<:decoder}(i::Information{B,T},response::Array{Float64,2},stimulus::Array{Float64,1})
+    predict=project(i.m,response,stimulus)
+    (conmat, p_s, p_r)=conmatrix(i.m,predict,stimulus)
 end
 
 function polyfit(x::Array{Float64,1}, y::Array{Float64,1}, n::Int64)
