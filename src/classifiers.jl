@@ -98,12 +98,16 @@ function conmatrix{C<:classifier,V<:validation}(m::decoder{C,V},realval::Array{F
         conmat[yind,xind]+=1
     end
 
-    totals=sum(conmat,2)
+    totals_real=sum(conmat,2)
+    totals_predict=sum(conmat,2)
     
     for i=1:length(classes)
-        conmat[i,:]=conmat[i,:]./totals[i]
+        conmat[i,:]=conmat[i,:]./totals_real[i]
     end
 
-    conmat
+    p_real=totals_real./sum(totals_real)
+    p_predict=squeeze(totals_predict./sum(totals_predict))',2)
+    
+    (conmat, p_real, p_predict)
     
 end
