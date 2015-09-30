@@ -35,23 +35,13 @@ function fit!{C<:LDA, V<:validation}(m::decoder{C,V})
         
     end
 
-    Sw=Sw.e/k
+    Sw=Sw./k
     St=cov(m.response)
     Sb = St - Sw
 
     (myv, m.c.W)=eig(Sb,Sw)
     
-    PriorProb = nGroup / size(m.response,1)
-
-    for i = 1:k
-
-        Temp = GroupMean[i,:] * m.c.W * m.c.W'
-    
-        m.c.W[i,1] = (-0.5 * Temp * GroupMean[i,:]')[1] + log(PriorProb[i])
-    
-        m.c.W[i,2:end] = Temp
-        
-    end
+    m.c.centroids=GroupMean*m.c.W
 
     nothing
     
@@ -61,10 +51,16 @@ function validate!{C<:LDA, V<:Training}(m::decoder{C,V})
 
     classes=unique(m.stimulus)
     m.predict=zeros(Float64,size(m.v.stimulus,1))
+
+    xnew=m.v.response*m.c.W
+
+    mydist=zeros(Float64,length(classes))
     
     for i=1:size(m.v.stimulus,1)
-        project=m.c.w*m.v.response[i,:]
-        m.predict=classes[minind(abs(project-classes))]
+        for j=1:length(classes)
+            mydist[j]=norm(xnew[i,:]-m.c.centroids[j,:])
+        end
+        m.predict[i]=classes[indmin(mydist)]
     end
 
     nothing

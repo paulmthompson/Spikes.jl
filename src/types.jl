@@ -130,6 +130,7 @@ end
 
 type LDA <: classifier
     W::Array{Float64,2}
+    centroids::Array{Float64,2}
 end
 
 type QDA <: classifier
