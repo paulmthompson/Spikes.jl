@@ -114,18 +114,22 @@ end
 Decoder Types
 =#
 
+export decoder, LDA, LeaveOne, Training
+
 abstract classifier
 
 abstract validation
 
 type decoder{C<:classifier,V<:validation}
     response::Array{Float64,2}
-    stimulus::Array{Float64,2}
+    stimulus::Array{Float64,1}
+    predict::Array{Float64,1}
     c::C
     v::V
 end
 
-type LDA <: classifier 
+type LDA <: classifier
+    W::Array{Float64,2}
 end
 
 type QDA <: classifier
@@ -141,6 +145,8 @@ type LeaveOne <: validation
 end
 
 type Training <: validation
+    response::Array{Float64,2}
+    stimulus::Array{Float64,1}
 end
 
 #=
