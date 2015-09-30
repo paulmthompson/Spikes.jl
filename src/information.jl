@@ -1,5 +1,5 @@
 
-
+export MI_bias_QE
 
 #=
 Bias correction techniques
@@ -18,7 +18,7 @@ Plot result against 1/n_s, and fit quadratic polynomial by least squares
 Intercept is true information
 =#
 
-function MI_bias_QE{C<:classifier,V<:validation}(m::decoder{C,V},realval::Array{Float64,1})
+function MI_bias_QE{C<:classifier,V<:validation}(m::decoder{C,V},response::Array{Float64,2},stimulus::Array{Float64,1})
 
     N_s=length(realval)
     
@@ -27,8 +27,9 @@ function MI_bias_QE{C<:classifier,V<:validation}(m::decoder{C,V},realval::Array{
     samplepoints=[N_s; N_s/2; N_s/4]
     
     MI=zeros(Float64,3)   
-    
-    (conmat, p_s, p_r)=conmatrix(m,realval)
+
+    predict=project(m,response,stimulus)
+    (conmat, p_s, p_r)=conmatrix(m,predict,stimulus)
 
     MI[1]=mutual_information(conmat,p_s,p_r)
 
@@ -36,9 +37,11 @@ function MI_bias_QE{C<:classifier,V<:validation}(m::decoder{C,V},realval::Array{
 
         theseinds=sample(myinds, samplepoints[i], replace=false)
 
-        temprealval=realval[theseinds]
+        stimulus_2=stimulus[theseinds]
+        response_2=response[theseinds,:]
+        predict_2=project(m,response_2,stimulus_2)
         
-        (conmat2, p_s2, p_r2)=conmatrix(m,temprealval)
+        (conmat2, p_s2, p_r2)=conmatrix(m,predict_2,stimulus_2)
 
         MI[i]=mutual_information(conmat2,p_s2,p_r2)
 

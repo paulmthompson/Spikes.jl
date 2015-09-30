@@ -1,5 +1,5 @@
 
-export fit!, validate!, conmatrix
+export fit!, project, conmatrix
 
 #=
 Maximum Liklihood
@@ -15,28 +15,28 @@ Shrinkage?
 LDA
 =#
 
-function fit!{C<:LDA, V<:validation}(m::decoder{C,V})
+function fit!{C<:LDA, V<:validation}(m::decoder{C,V},response::Array{Float64,2},stimulus::Array{Float64,1})
 
-    classes=unique(m.stimulus)
-    k=length(classes)
+    m.classes=unique(stimulus)
+    k=length(m.classes)
 
     nGroup=zeros(Int64,k)
-    GroupMean=zeros(Float64,k,size(m.response,2))
-    Sw=zeros(Float64,size(m.response,2),size(m.response,2))
-    m.c.W=zeros(Float64,k,size(m.response,2)+1)
+    GroupMean=zeros(Float64,k,size(response,2))
+    Sw=zeros(Float64,size(response,2),size(response,2))
+    m.c.W=zeros(Float64,k,size(response,2)+1)
 
     for i=1:k
-        Group = m.stimulus.==classes[i]
+        Group = stimulus.==m.classes[i]
         nGroup[i]=sum(Group)
 
-        GroupMean[i,:]=mean(m.response[Group,:],1)
+        GroupMean[i,:]=mean(response[Group,:],1)
 
-        Sw += cov(m.response[Group,:])
+        Sw += cov(response[Group,:])
         
     end
 
     Sw=Sw./k
-    St=cov(m.response)
+    St=cov(response)
     Sb = St - Sw
 
     (myv, m.c.W)=eig(Sb,Sw)
@@ -47,25 +47,35 @@ function fit!{C<:LDA, V<:validation}(m::decoder{C,V})
     
 end
 
-function validate!{C<:LDA, V<:Training}(m::decoder{C,V})
+function project{C<:LDA, V<:validation}(m::decoder{C,V},response::Array{Float64,2},stimulus::Array{Float64,1})
 
-    classes=unique(m.stimulus)
-    m.predict=zeros(Float64,size(m.v.stimulus,1))
+    predict=zeros(Float64,size(m.v.stimulus,1))
 
-    xnew=m.v.response*m.c.W
+    xnew=response*m.c.W
 
-    mydist=zeros(Float64,length(classes))
+    mydist=zeros(Float64,length(m.classes))
     
-    for i=1:size(m.v.stimulus,1)
-        for j=1:length(classes)
+    for i=1:size(stimulus,1)
+        for j=1:length(m.classes)
             mydist[j]=norm(xnew[i,:]-m.c.centroids[j,:])
         end
-        m.predict[i]=classes[indmin(mydist)]
+        predict[i]=m.classes[indmin(mydist)]
     end
 
-    nothing
+    predict
     
 end
+
+function validate{C<:LDA, V<:Training}(m::decoder{C,V},response::Array{Float64,2},stimulus::Array{Float64,1})
+    
+
+end
+
+function validate{C<:LDA, V<:LeaveOne}(m::decoder{C,V},response::Array{Float64,2},stimulus::Array{Float64,1})
+    
+
+end
+
 
 #=
 Nearest Neighbor Classification
@@ -81,27 +91,26 @@ Naive Bayesian
 General Methods
 =#
 
-function conmatrix{C<:classifier,V<:validation}(m::decoder{C,V},realval::Array{Float64,1})
+function conmatrix{C<:classifier,V<:validation}(m::decoder{C,V},predict::Array{Float64,1},stimulus::Array{Float64,1})
 
-    classes=unique(m.stimulus)
-    inds=collect(1:length(classes))
+    inds=collect(1:length(m.classes))
 
-    mydict=Dict{Float64,Int64}([classes[i]=>inds[i] for i=1:length(classes)])
+    mydict=Dict{Float64,Int64}([m.classes[i]=>inds[i] for i=1:length(m.classes)])
 
     #y is true, x is predicted
     #sum across columns should equal 1
-    conmat=zeros(Float64,length(classes),length(classes))
+    conmat=zeros(Float64,length(m.classes),length(m.classes))
 
     for i=1:length(realval)
         yind=mydict[realval[i]]
-        xind=mydict[m.predict[i]]
+        xind=mydict[predict[i]]
         conmat[yind,xind]+=1
     end
 
     totals_real=sum(conmat,2)
     totals_predict=sum(conmat,2)
     
-    for i=1:length(classes)
+    for i=1:length(m.classes)
         conmat[i,:]=conmat[i,:]./totals_real[i]
     end
 
