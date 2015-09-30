@@ -127,9 +127,17 @@ type decoder{C<:classifier,V<:validation} <: transformation
     v::V
 end
 
+function decoder(c::classifier,v::validation)
+    decoder(Array(Float64,0),c,v)
+end
+
 type LDA <: classifier
     W::Array{Float64,2}
     centroids::Array{Float64,2}
+end
+
+function LDA()
+    LDA(Array(Float64,0,0),Array(Float64,0,0))
 end
 
 type QDA <: classifier
@@ -152,6 +160,8 @@ end
 #=
 Information Types
 =#
+
+export Information, QE
 
 type Information{B<:bias,T<:transformation}
     b::B

@@ -49,7 +49,7 @@ end
 
 function project{C<:LDA, V<:validation}(m::decoder{C,V},response::Array{Float64,2},stimulus::Array{Float64,1})
 
-    predict=zeros(Float64,size(m.v.stimulus,1))
+    predict=zeros(Float64,size(stimulus,1))
 
     xnew=response*m.c.W
 
@@ -101,21 +101,21 @@ function conmatrix{C<:classifier,V<:validation}(m::decoder{C,V},predict::Array{F
     #sum across columns should equal 1
     conmat=zeros(Float64,length(m.classes),length(m.classes))
 
-    for i=1:length(realval)
-        yind=mydict[realval[i]]
+    for i=1:length(stimulus)
+        yind=mydict[stimulus[i]]
         xind=mydict[predict[i]]
         conmat[yind,xind]+=1
     end
 
     totals_real=sum(conmat,2)
-    totals_predict=sum(conmat,2)
+    totals_predict=sum(conmat,1)
     
     for i=1:length(m.classes)
         conmat[i,:]=conmat[i,:]./totals_real[i]
     end
 
-    p_real=totals_real./sum(totals_real)
-    p_predict=squeeze(totals_predict./sum(totals_predict))',2)
+    p_real=squeeze(totals_real./sum(totals_real),2)
+    p_predict=squeeze((totals_predict./sum(totals_predict))',2)
     
     (conmat, p_real, p_predict)
     
