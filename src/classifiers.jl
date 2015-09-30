@@ -102,9 +102,12 @@ function conmatrix{C<:classifier,V<:validation}(m::decoder{C,V},predict::Array{F
     conmat=zeros(Float64,length(m.classes),length(m.classes))
 
     for i=1:length(stimulus)
-        yind=mydict[stimulus[i]]
-        xind=mydict[predict[i]]
-        conmat[yind,xind]+=1
+        if length(find(stimulus[i].==m.classes))==0 #might be a stimulus in a val set that isn't in training
+        else
+            yind=mydict[stimulus[i]]
+            xind=mydict[predict[i]]
+            conmat[yind,xind]+=1
+        end 
     end
 
     totals_real=sum(conmat,2)

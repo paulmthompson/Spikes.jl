@@ -70,8 +70,9 @@ function mutual_information(p_rs::Array{Float64,2},p_s::Array{Float64,1},p_r::Ar
     
     for i=1:size(p_rs,1)
         for j=1:size(p_rs,2)
-            if p_rs[i,j]==0.0
-            else    
+            if (p_rs[i,j]==0.0) || (isnan(p_rs[i,j]))
+            elseif p_r[j]==0.0
+            else
                 MI+=p_rs[i,j]*p_s[i]*log2(p_rs[i,j]/(p_r[j]))
             end
             
