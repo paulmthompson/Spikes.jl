@@ -1,7 +1,7 @@
 
 module Spikes
 
-using MAT, PyPlot, HDF5, ArrayViews, Images, DimensionalityReduction
+using MAT, PyPlot, HDF5, ArrayViews, Images, DimensionalityReduction, StatsBase
 
 include("types.jl")
 include("rates.jl")
