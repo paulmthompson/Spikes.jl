@@ -20,10 +20,24 @@ function fit!{C<:LDA, V<:validation}(m::decoder{C,V},response::Array{Float64,2},
     m.classes=unique(stimulus)
     k=length(m.classes)
 
+    #if any stimulus appears <10 times, ignore it
+    keep=Array(Int64,0)
+    for i=1:k
+        Group = sum(stimulus.==m.classes[i])
+        if Group<10
+        else
+            push!(keep,i)
+        end
+    end
+
+    m.classes=m.classes[keep]
+    k=length(m.classes)
+        
+
     nGroup=zeros(Int64,k)
     GroupMean=zeros(Float64,k,size(response,2))
     Sw=zeros(Float64,size(response,2),size(response,2))
-    m.c.W=zeros(Float64,k,size(response,2)+1)
+    m.c.W=zeros(Float64,k,size(response,2))
 
     for i=1:k
         Group = stimulus.==m.classes[i]
