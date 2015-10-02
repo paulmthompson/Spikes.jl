@@ -47,6 +47,8 @@ function MI{B<:QE, T<:transformation}(info::Information{B,T},response::Array{Flo
 
     I_corrected=polyfit(1./samplepoints, MI, 2)[1]
 
+    (I_corrected, conmat)
+
 end
 
 #=

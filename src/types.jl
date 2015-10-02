@@ -132,12 +132,13 @@ function decoder(c::classifier,v::validation)
 end
 
 type LDA <: classifier
+    myv::Array{Float64,1}
     W::Array{Float64,2}
     centroids::Array{Float64,2}
 end
 
 function LDA()
-    LDA(Array(Float64,0,0),Array(Float64,0,0))
+    LDA(Array(Float64,0),Array(Float64,0,0),Array(Float64,0,0))
 end
 
 type QDA <: classifier

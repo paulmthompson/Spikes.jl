@@ -38,6 +38,7 @@ function fit!{C<:LDA, V<:validation}(m::decoder{C,V},response::Array{Float64,2},
     GroupMean=zeros(Float64,k,size(response,2))
     Sw=zeros(Float64,size(response,2),size(response,2))
     m.c.W=zeros(Float64,k,size(response,2))
+    covmat=zeros(Float64,size(response,2),size(response,2),k)
 
     for i=1:k
         Group = stimulus.==m.classes[i]
@@ -45,15 +46,22 @@ function fit!{C<:LDA, V<:validation}(m::decoder{C,V},response::Array{Float64,2},
 
         GroupMean[i,:]=mean(response[Group,:],1)
 
-        Sw += cov(response[Group,:])
+        covmat[:,:,i] = cov(response[Group,:])
         
     end
 
-    Sw=Sw./k
+    for i=1:k
+        Sw+=(nGroup[i]/sum(nGroup)).*covmat[:,:,i]
+    end
+    
     St=cov(response)
     Sb = St - Sw
 
-    (myv, m.c.W)=eig(Sb,Sw)
+    (m.c.myv, W)=eig(Sb,Sw)
+
+    mostvar=find((m.c.myv./sum(m.c.myv)).>.01)
+
+    m.c.W=W[:,mostvar]
     
     m.c.centroids=GroupMean*m.c.W
 
@@ -74,6 +82,26 @@ function project{C<:LDA, V<:validation}(m::decoder{C,V},response::Array{Float64,
             mydist[j]=norm(xnew[i,:]-m.c.centroids[j,:])
         end
         predict[i]=m.classes[indmin(mydist)]
+    end
+
+    predict
+    
+end
+
+function project(myLDA::PyObject,response::Array{Float64,2},stimulus::Array{Float64,1})
+
+    predict=zeros(Float64,size(stimulus,1))
+
+    classes=myLDA[:classes_]
+    mydist=zeros(Float64,length(classes))
+    mycentroids=myLDA[:transform](myLDA[:means_])
+    
+    for i=1:size(stimulus,1)
+        xnew=myLDA[:transform](response[i,:])
+        for j=1:length(classes)
+            mydist[j]=norm(xnew-mycentroids[j,:])
+        end
+        predict[i]=classes[indmin(mydist)]
     end
 
     predict
