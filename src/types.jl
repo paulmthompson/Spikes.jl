@@ -1,5 +1,5 @@
 
-export SpikeTrain, findspikes, addevent!, addcenter!, rate_bin, rate_KD
+export SpikeTrain, findspikes, addevent!, addcenter!, rate_bin, rate_KD, Kinematic
 
 #=
 Main data container of timestamps and trial data
@@ -51,8 +51,7 @@ function findspikes(spikes::Array{Float64,2},times::Array{Any,2},win::Float64)
 
     addevent!(myspikes,times,win)
 
-    myspikes
-    
+    myspikes  
 end
 
 function addevent!(spikes::Array{SpikeTrain,1},times::Array{Any,2},win::Float64)
@@ -106,8 +105,7 @@ type rate_KD <: rate
         end
 
         new(spikes,binsize,kern)
-    end
-       
+    end   
 end
 
 #=
@@ -172,6 +170,12 @@ end
 type QE <: bias
 end
 
+# Behavioral Types
 
-    
+type Kinematic
+    px::Array{Float64,1}
+    py::Array{Float64,1}
+    vx::Array{Float64,1}
+    vy::Array{Float64,1}
+end
 
