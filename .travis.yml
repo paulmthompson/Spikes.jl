@@ -1,0 +1,21 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
+language: julia
+os:
+  - linux
+julia:
+  - release
+  - nightly
+notifications:
+  email: false
+addons:
+   apt:
+      packages:
+         - xvfb
+         - xauth
+         - libgtk-3-0
+script:
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia ./test/install_SS.jl
+  - xvfb-run julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("Spikes"); Pkg.test("Spikes"; coverage=true)'
+after_success:
+  - julia -e 'cd(Pkg.dir("Spikes")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

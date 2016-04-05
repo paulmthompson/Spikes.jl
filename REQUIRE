@@ -1,0 +1,11 @@
+julia 0.4
+HDF5
+MAT
+PyPlot
+ArrayViews
+Images
+DimensionalityReduction
+StatsBase
+PyCall
+HypothesisTests
+
