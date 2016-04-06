@@ -18,7 +18,7 @@ before_install:
   - sudo pip install matplotlib
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia ./test/install_Spikes.jl
+  - julia -e 'ENV["PYTHON"] = ""; Pkg.add("PyPlot"); Pkg.build("PyPlot")'
   - xvfb-run julia --check-bounds=yes --depwarn=no -e 'Pkg.clone(pwd()); Pkg.build("Spikes"); Pkg.test("Spikes"; coverage=true)'
 after_success:
   - julia -e 'cd(Pkg.dir("Spikes")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
