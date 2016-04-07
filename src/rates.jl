@@ -1,6 +1,7 @@
 
 
-export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, rate_trials, zscore, zscore_pop
+export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, plot_raster
+
 
 #=
 Histogram Methods
@@ -26,7 +27,6 @@ Shimazaki H. and Shinomoto S., A method for selecting the bin size of a time his
 
 #=
 Kernel Density Methods
-
 
 =#
 function rate_session(myrate::rate_KD,n::Int64)
@@ -142,8 +142,7 @@ function cost_function(binned::Array{Int64,1},N::Int64,w::Float64,dt::Float64)
     C=sum(yh.*2)*dt - 2 * sum(yh.*binned) * dt + 2 / sqrt(2*pi) / w / N
     C = C * N * N
     
-    C
-    
+    C   
 end
 
 #=
@@ -184,8 +183,7 @@ function zscore(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64},n::I
 
     mypsth=rate_event(myrate,inds,time,n)
     wholetrain=rate_session(myrate,n)
-    zscore=(mypsth-mean(wholetrain))./std(wholetrain)
-    
+    (mypsth-mean(wholetrain))./std(wholetrain)
 end
 
 function rate_window_pop(myrate::rate,ind::Int64,time::FloatRange{Float64})
@@ -194,9 +192,7 @@ function rate_window_pop(myrate::rate,ind::Int64,time::FloatRange{Float64})
     for i=1:size(raster,2)
         raster[:,i]=rate_window(myrate,ind,time,i)
     end
-
-    raster
-    
+    raster  
 end
 
 function zscore_pop(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64})
@@ -206,6 +202,47 @@ function zscore_pop(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64})
     for k=1:size(raster,1)
         raster[k,:]=zscore(myrate,inds,time,k)
     end   
-
     raster
 end
+
+function total_spikes(myrate::rate,inds::Array{Int64,1},n::Int64)
+    mysize=0
+    for i in inds
+        @inbounds mysize+=length(myrate.spikes[n].trials[i].inds)
+    end
+    mysize
+end
+    
+#=
+Plotting
+=#
+
+#=
+Raster
+=#
+
+function plot_raster(myrate::rate,inds::Array{Int64,1},n::Int64,ax)
+
+    mycount=1.0
+    myspikes=1
+    xy=[zeros(Float64,2,2) for i=1:total_spikes(myrate,inds,n)]
+    @inbounds for i in inds
+        mycenter=myrate.spikes[n].center[i,1] 
+        for j=1:length(myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds])
+            mytimes=myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds[j]]-mycenter
+            xy[myspikes][1,1]=mytimes
+            xy[myspikes][1,2]=mycount
+            xy[myspikes][2,1]=mytimes
+            xy[myspikes][2,2]=mycount+1.0
+            myspikes+=1
+        end
+        mycount+=1.0
+    end
+    c1=C.LineCollection(xy,color="black",linewidth=1.0)
+    ax[:add_collection](c1)
+    ax[:set_yticks]([])
+    ax[:set_ylabel]("")
+    ax[:set_ylim]([1,mycount])
+    nothing
+end
+

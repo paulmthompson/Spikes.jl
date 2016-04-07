@@ -29,8 +29,7 @@ function findspikes(spikes::Array{Array{Float64,1},1},times::Array{Any,2},win::F
     
     addevent!(myspikes,times,win)
 
-    myspikes
-    
+    myspikes 
 end
 
 function findspikes(spikes::Array{Float64,2},times::Array{Any,2},win::Float64)
@@ -67,7 +66,6 @@ function addevent!(spikes::Array{SpikeTrain,1},times::Array{Any,2},win::Float64)
             end
         end
     end
-
     nothing
 end
 
@@ -76,7 +74,6 @@ function addcenter!(spikes::Array{SpikeTrain,1},center::Array{Float64,1})
     for i=1:length(spikes)
         spikes[i].center=hcat(spikes[i].center,center)
     end
-
     nothing
 end
 
