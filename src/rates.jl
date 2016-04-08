@@ -1,6 +1,6 @@
 
 
-export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, plot_raster
+export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, plot_raster, plot_psth, plot_psth_raster, plot_raster_psth
 
 
 #=
@@ -243,6 +243,58 @@ function plot_raster(myrate::rate,inds::Array{Int64,1},n::Int64,ax)
     ax[:set_yticks]([])
     ax[:set_ylabel]("")
     ax[:set_ylim]([1,mycount])
+    ax[:set_xticks]([])
+    ax[:set_xticklabels]([])
     nothing
 end
 
+#=
+PSTH
+=#
+
+function plot_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64)
+
+    (fig,ax)=subplots(1,1)
+
+    plot_psth(myrate,ts,inds,n,ax)
+
+    (fig,ax)
+end
+
+function plot_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64,ax)
+
+    psth=rate_event(myrate,inds,ts,n)
+
+    ylimit=ceil(Int64,maximum(psth)/10)*10
+    ax[:set_yticks]([0, ylimit])
+    ax[:set_yticklabels]([0,ylimit],size=6)
+    ax[:set_ylabel]("Rate (spikes/s)", size=6)
+
+    ax[:set_xticks]([])
+    ax[:set_xticklabels]([])
+    ax[:bar](2:length(ts),psth,color="black")
+    ax[:set_ylim]([0, ylimit])
+    nothing
+end
+
+function plot_psth_raster(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64)
+
+    (fig,ax)=subplots(2,1)
+    subplots_adjust(hspace=0.0)
+
+    plot_psth(myrate,ts,inds,n,ax[1,1])
+    plot_raster(myrate,inds,n,ax[2,1])
+    ax[2,1][:set_xlabel]("Time (s)", size=8)
+    (fig,ax)
+end
+
+function plot_raster_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64)
+
+    (fig,ax)=subplots(2,1)
+    subplots_adjust(hspace=0.0)
+    
+    plot_raster(myrate,inds,n,ax[1,1])
+    plot_psth(myrate,ts,inds,n,ax[2,1])
+    ax[2,1][:set_xlabel]("Time (s)", size=8)
+    (fig,ax)
+end

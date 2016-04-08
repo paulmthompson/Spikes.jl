@@ -15,6 +15,10 @@ Contents:
   Behavior.rst
   Firing_Rate.rst
   Tuning.rst
+  Decoding.rst
+  Information.rst
+  GLM.rst
+  
   
 
 

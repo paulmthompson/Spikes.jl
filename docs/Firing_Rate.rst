@@ -25,6 +25,8 @@ This is the most classic method for determining firing rate and is simple to imp
 
 Even with these drawbacks, calculating firing rate with histogram-based methods is very simple to implement and can easily be repeated with a variety of binsizes very quickly. Additionally, the "optimal" binsize that can maximize noise averaging while maintaining the underlying firing rate can be estimated.
 
+.. image:: ./_Images/psth_bin.png
+
 ---------------
 Predefined bin
 ---------------
@@ -46,6 +48,8 @@ The drawback to these methods is that they are somewhat dependent on what window
 The most typical window function is a gaussian. It is easy to use and familiar. Other windows could be chosen, like acausal windows that will not incorporate future spikes, but these can present their own problems like time delays.
 
 Like the histogram method, there are ways to estimate the "optimal" width of the kernel for smoothing. There are also methods to chose multiple windows in the time of interest, such that times where there is rapid fluctuations in spike counts will use small windows to capture these changes, and periods with few changes in spike counts will use long windows.
+
+.. image:: ./_Images/psth_kernel.png
 
 -----------------
 Predefined width
