@@ -71,16 +71,24 @@ Shimazaki H. and Shinomoto S., Kernel Bandwidth Optimization in Spike Rate Estim
 Single Unit
 ************
 
+After deciding how "rate" can be quantified, we often do not consider the entire time series of firing rate over an experiment, but rather firing rate during some meaning window of time, or statistical manipulations of firing rate. We will discuss these below.
+
 -----------------------------
 Peri-Stimulus Time Histogram
 -----------------------------
+
+It can be very instructive to examine how the average firing rate of a neuron is modulatd around some meaningful window of time. For example, how does a neuron on average fire in response to some stimulus? 
 
 ***********
 Population
 ***********
 
+It can also be informative to examine metrics of many neurons' firing rates simultaneously. Again, we usually do not look at all of the time series of firing rates for every neuron at the same time, but rather firing rates around some meaningful window of time, or statistical metric to quantify similarities or differences between firing rates.
+
 ----------------------------------------
 Population Peri-Stimulus Time Histogram
 ----------------------------------------
+
+Similar to how we can view peristimulus time histograms for single neurons, we can view PSTHs for many neurons at once. Importantly, neurons can have very different baseline firing rates, so we usually want to normalize firing rates to do this. This is often accomplished with Z-scores, which is computing by subtracting the mean firing rate and dividing by the standard deviation. A z-score can then essentially show what multiple of standard deviation a firing rate is above the mean.
 
 
