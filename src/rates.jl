@@ -1,6 +1,6 @@
 
 
-export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, plot_raster, plot_psth, plot_psth_raster, plot_raster_psth
+export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, plot_raster, plot_psth, plot_psth_raster, plot_raster_psth, plot_pop_psth, plot_pop_psth_cb
 
 
 #=
@@ -298,3 +298,32 @@ function plot_raster_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64
     ax[2,1][:set_xlabel]("Time (s)", size=8)
     (fig,ax)
 end
+
+function plot_pop_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},lims::NTuple{2,Float64})
+
+    (fig,ax)=subplots(1,1)
+    myplot=plot_pop_psth(myrate,ts,inds,lims,ax)
+    (fig,ax)
+end
+
+function plot_pop_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},lims::NTuple{2,Float64},ax)
+
+    popth=zscore_pop(myrate,inds,ts)
+
+    ax[:set_yticks]([])
+    ax[:set_yticklabels]([])
+    ax[:set_ylabel]("Neuron", size=8)
+
+    ax[:set_xlabel]("Time (s)", size=8)
+
+    myplot=ax[:pcolor](popth,cmap="jet",vmin=lims[1],vmax=lims[2])
+end
+
+function plot_pop_psth_cb(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},lims::NTuple{2,Float64})
+    (fig,ax)=subplots(1,1)
+    myplot=plot_pop_psth(myrate,ts,inds,lims,ax)
+    cbar_ax = fig[:add_axes]([.85,.15,.02,.7])
+    fig[:colorbar](myplot,cax=cbar_ax,label="Z score",ticks=[lims[1],lims[2]])
+    (fig,ax)
+end
+    
