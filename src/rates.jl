@@ -9,15 +9,23 @@ Histogram Methods
 =#
 
 function rate_session(myrate::rate_bin,n::Int64)
-    hist(myrate.spikes[n].ts,myrate.spikes[n].trials[1].time:myrate.binsize:myrate.spikes[n].trials[end].time)[2]./myrate.binsize
+    hist(myrate.spikes[n].ts,collect(myrate.spikes[n].trials[1].time:myrate.binsize:myrate.spikes[n].trials[end].time))[2]./myrate.binsize
 end
 
-function rate_window(myrate::rate_bin,ind::Int64,time::FloatRange{Float64},n::Int64)
-    spikehist(myrate,ind,time,n)./myrate.binsize
+function rate_window(myrate::rate_bin,ind::Int64,ts::FloatRange{Float64},n::Int64)
+    spikehist(myrate,ind,ts,n)./myrate.binsize
 end
 
-function rate_event(myrate::rate_bin,inds::Array{Int64,1},time::FloatRange{Float64},n::Int64)
-    collect_ts(myrate,inds,time,n)./myrate.binsize
+function rate_window(myrate::rate_bin,ind::Int64,ts::Array{Float64,1},n::Int64)
+    spikehist(myrate,ind,ts,n)./myrate.binsize
+end
+
+function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::FloatRange{Float64},n::Int64)
+    collect_ts(myrate,inds,ts,n)./myrate.binsize
+end
+
+function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64)
+    collect_ts(myrate,inds,ts,n)./myrate.binsize
 end
 
 #=
@@ -170,8 +178,12 @@ function rate_trials(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64}
     spikes_temp   
 end
 
-function spikehist(myrate::rate,ind::Int64,time::FloatRange{Float64},n::Int64)
-    hist(myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],time[1]:myrate.binsize:time[end])[2]
+function spikehist(myrate::rate,ind::Int64,ts::FloatRange{Float64},n::Int64)
+    hist(myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],ts[1]:myrate.binsize:ts[end])[2]
+end
+
+function spikehist(myrate::rate,ind::Int64,ts::Array{Float64,1},n::Int64)
+    hist(myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],ts)[2]
 end
 
 function collect_ts(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64},n::Int64)
@@ -179,28 +191,45 @@ function collect_ts(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64},
     hist(spikes_temp,time)[2]/length(inds)    
 end
 
-function zscore(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64},n::Int64)
+function collect_ts(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64)
+    spikes_temp=vcat([myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds]-myrate.spikes[n].center[i,1] for i in inds]...)
+    hist(spikes_temp,ts)[2]/length(inds)    
+end
 
-    mypsth=rate_event(myrate,inds,time,n)
+function zscore(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64},n::Int64)
+    mypsth=rate_event(myrate,inds,ts,n)
     wholetrain=rate_session(myrate,n)
     (mypsth-mean(wholetrain))./std(wholetrain)
 end
 
-function rate_window_pop(myrate::rate,ind::Int64,time::FloatRange{Float64})
+function zscore(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64)
+    mypsth=rate_event(myrate,inds,ts,n)
+    wholetrain=rate_session(myrate,n)
+    (mypsth-mean(wholetrain))./std(wholetrain)
+end
+
+function rate_window_pop(myrate::rate,ind::Int64,ts::FloatRange{Float64})
+     rate_window_pop(myrate,ind,collect(ts))
+end
+
+function rate_window_pop(myrate::rate,ind::Int64,ts::Array{Float64,1})
     raster=zeros(Float64,length(time[1]:myrate.binsize:time[end])-1,length(myrate.spikes))
 
     for i=1:size(raster,2)
         raster[:,i]=rate_window(myrate,ind,time,i)
     end
-    raster  
+    raster 
 end
 
-function zscore_pop(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64})
-    
-    raster=zeros(Float64,length(myrate.spikes),length(time[1]:myrate.binsize:time[end])-1)
+function zscore_pop(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64})
+    zscore_pop(myrate,inds,collect(ts))
+end
+
+function zscore_pop(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1})
+    raster=zeros(Float64,length(myrate.spikes),length(ts)-1)
 
     for k=1:size(raster,1)
-        raster[k,:]=zscore(myrate,inds,time,k)
+        raster[k,:]=zscore(myrate,inds,ts,k)
     end   
     raster
 end
