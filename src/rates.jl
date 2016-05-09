@@ -1,6 +1,6 @@
 
 
-export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, plot_raster, plot_psth, plot_psth_raster, plot_raster_psth, plot_pop_psth, plot_pop_psth_cb
+export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, plot_raster, plot_psth, plot_psth_raster, plot_raster_psth, plot_pop_psth, plot_pop_psth_cb, psth_pop
 
 
 #=
@@ -186,14 +186,33 @@ function spikehist(myrate::rate,ind::Int64,ts::Array{Float64,1},n::Int64)
     hist(myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],ts)[2]
 end
 
-function collect_ts(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64},n::Int64)
-    spikes_temp=vcat([myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds]-myrate.spikes[n].center[i,1] for i in inds]...)
-    hist(spikes_temp,time)[2]/length(inds)    
+function collect_ts(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64},n::Int64,output=zeros(Float64,length(ts)-1))
+    collect_ts(myrate,inds,collect(ts),n,output)
 end
 
-function collect_ts(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64)
-    spikes_temp=vcat([myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds]-myrate.spikes[n].center[i,1] for i in inds]...)
-    hist(spikes_temp,ts)[2]/length(inds)    
+function collect_ts(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64,output=zeros(Float64,length(ts)-1))
+   @inbounds for i in inds
+        count=1
+        mycent=myrate.spikes[n].center[i,1]
+        for j=1:length(myrate.spikes[n].trials[i].inds)
+            myt=myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds[j]]-mycent
+            if myt>ts[count]
+                k=count+1
+                while k < length(ts)+1
+                    if myt<ts[k]
+                        output[k-1]+=1.0
+                        count=k-1
+                        break
+                    end
+                    k+=1
+                end
+            end
+        end
+    end
+    @inbounds for i=1:length(output)
+        output[i]=output[i]/length(inds)
+    end
+    output
 end
 
 function zscore(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64},n::Int64)
@@ -221,9 +240,7 @@ function rate_window_pop(myrate::rate,ind::Int64,ts::Array{Float64,1})
     raster 
 end
 
-function zscore_pop(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64})
-    zscore_pop(myrate,inds,collect(ts))
-end
+zscore_pop(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64})=zscore_pop(myrate,inds,collect(ts))
 
 function zscore_pop(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1})
     raster=zeros(Float64,length(myrate.spikes),length(ts)-1)
@@ -233,6 +250,17 @@ function zscore_pop(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1})
     end   
     raster
 end
+
+psth_pop(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64})=psth_pop(myrate,inds,collect(ts))
+
+function psth_pop(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1})
+    raster=zeros(Float64,length(myrate.spikes),length(ts)-1)
+    for k=1:size(raster,1)
+        raster[k,:]=rate_event(myrate,inds,ts,k)
+    end
+    raster
+end
+
 
 function total_spikes(myrate::rate,inds::Array{Int64,1},n::Int64)
     mysize=0
