@@ -28,6 +28,18 @@ function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::Array{Float64,1},n
     collect_ts(myrate,inds,ts,n)./myrate.binsize
 end
 
+function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64,output::Array{Float64,1})
+    collect_ts(myrate,inds,ts,n,output)
+    @inbounds for i=1:length(output)
+        output[i]=output[i]/myrate.binsize
+    end
+    nothing
+end
+
+function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::FloatRange{Float64},n::Int64,output::Array{Float64,1})
+    collect_ts(myrate,inds,collect(ts),n,output)
+end
+
 #=
 TODO
 Shimazaki H. and Shinomoto S., A method for selecting the bin size of a time histogram
@@ -191,6 +203,9 @@ function collect_ts(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64},n:
 end
 
 function collect_ts(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64,output=zeros(Float64,length(ts)-1))
+    @inbounds for i=1:length(output)
+        output[i]=0.0
+    end
    @inbounds for i in inds
         count=1
         mycent=myrate.spikes[n].center[i,1]
@@ -251,12 +266,15 @@ function zscore_pop(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1})
     raster
 end
 
-psth_pop(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64})=psth_pop(myrate,inds,collect(ts))
+psth_pop(myrate::rate,inds::Array{Int64,1},ts::FloatRange{Float64},raster=zeros(Float64,length(myrate.spikes),length(ts)-1))=psth_pop(myrate,inds,collect(ts),raster)
 
-function psth_pop(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1})
-    raster=zeros(Float64,length(myrate.spikes),length(ts)-1)
+function psth_pop(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},raster=zeros(Float64,length(myrate.spikes),length(ts)-1))   
+    tempmat=zeros(Float64,length(ts)-1)
     for k=1:size(raster,1)
-        raster[k,:]=rate_event(myrate,inds,ts,k)
+        rate_event(myrate,inds,ts,k,tempmat)
+        @inbounds for j=1:length(tempmat)
+            raster[k,j]=tempmat[j]
+        end
     end
     raster
 end
