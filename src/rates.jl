@@ -296,14 +296,14 @@ Plotting
 Raster
 =#
 
-function plot_raster(myrate::rate,inds::Array{Int64,1},n::Int64,ax)
+function plot_raster(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64,ax)
 
     mycount=1.0
     myspikes=1
     xy=[zeros(Float64,2,2) for i=1:total_spikes(myrate,inds,n)]
     @inbounds for i in inds
         mycenter=myrate.spikes[n].center[i,1] 
-        for j=1:length(myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds])
+        for j=1:length(myrate.spikes[n].trials[i].inds)
             mytimes=myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds[j]]-mycenter
             xy[myspikes][1,1]=mytimes
             xy[myspikes][1,2]=mycount
@@ -320,6 +320,7 @@ function plot_raster(myrate::rate,inds::Array{Int64,1},n::Int64,ax)
     ax[:set_ylim]([1,mycount])
     ax[:set_xticks]([])
     ax[:set_xticklabels]([])
+    ax[:set_xlim]([ts[1],ts[end]])
     nothing
 end
 
@@ -327,7 +328,11 @@ end
 PSTH
 =#
 
-function plot_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64)
+plot_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64)=plot_psth(myrate,collect(ts),inds,n)
+
+plot_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64,ax)=plot_psth(myrate,collect(ts),inds,n,ax)
+
+function plot_psth(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int64)
 
     (fig,ax)=subplots(1,1)
 
@@ -336,7 +341,7 @@ function plot_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::
     (fig,ax)
 end
 
-function plot_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64,ax)
+function plot_psth(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int64,ax)
 
     psth=rate_event(myrate,inds,ts,n)
 
@@ -352,13 +357,15 @@ function plot_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::
     nothing
 end
 
-function plot_psth_raster(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64)
+plot_psth_raster(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64)=plot_psth_raster(myrate,collect(ts),inds,n)
+
+function plot_psth_raster(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int64)
 
     (fig,ax)=subplots(2,1)
     subplots_adjust(hspace=0.0)
 
     plot_psth(myrate,ts,inds,n,ax[1,1])
-    plot_raster(myrate,inds,n,ax[2,1])
+    plot_raster(myrate,inds,ts,n,ax[2,1])
     ax[2,1][:set_xlabel]("Time (s)", size=8)
     (fig,ax)
 end
@@ -368,7 +375,7 @@ function plot_raster_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64
     (fig,ax)=subplots(2,1)
     subplots_adjust(hspace=0.0)
     
-    plot_raster(myrate,inds,n,ax[1,1])
+    plot_raster(myrate,inds,ts,n,ax[1,1])
     plot_psth(myrate,ts,inds,n,ax[2,1])
     ax[2,1][:set_xlabel]("Time (s)", size=8)
     (fig,ax)
