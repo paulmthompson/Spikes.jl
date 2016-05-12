@@ -7,6 +7,7 @@ using MAT, PyPlot, HDF5, ArrayViews, Images, DimensionalityReduction, StatsBase,
 
 include("types.jl")
 include("rates.jl")
+include("tuning.jl")
 include("dimensionreduce.jl")
 include("jpsth.jl")
 include("neuron_dropping.jl")
