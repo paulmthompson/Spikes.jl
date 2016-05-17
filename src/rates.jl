@@ -1,6 +1,6 @@
 
 
-export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, plot_raster, plot_psth, plot_psth_raster, plot_raster_psth, plot_pop_psth, plot_pop_psth_cb, psth_pop
+export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop, zscore, zscore_pop, psth_per_con,plot_raster, plot_psth, plot_psth_raster, plot_raster_psth, plot_pop_psth, plot_pop_psth_cb, psth_pop
 
 
 #=
@@ -279,7 +279,6 @@ function psth_pop(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},raster=
     raster
 end
 
-
 function total_spikes(myrate::rate,inds::Array{Int64,1},n::Int64)
     mysize=0
     for i in inds
@@ -287,7 +286,35 @@ function total_spikes(myrate::rate,inds::Array{Int64,1},n::Int64)
     end
     mysize
 end
+
+function total_spikes(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64)
+
+    mysize=0
+    @inbounds for i in inds
+        mycent=myrate.spikes[n].center[i,1]
+        for j in myrate.spikes[n].trials[i].inds
+            if myrate.spikes[n].ts[j]-mycent > ts[end]
+                break
+            elseif myrate.spikes[n].ts[j]-mycent > ts[1]
+                mysize+=1
+            end
+        end
+    end
+    mysize
+end
     
+function psth_per_con(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int64,cons::Array{Int64,1})
+
+    psths=zeros(Float64,length(ts)-1,length(cons))
+
+    for i=1:length(cons)
+        con_inds=find(inds.==cons[i])
+        psths[:,i]=rate_event(myrate,con_inds,ts,n)
+    end
+
+    psths
+end
+
 #=
 Plotting
 =#
@@ -300,16 +327,19 @@ function plot_raster(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::I
 
     mycount=1.0
     myspikes=1
-    xy=[zeros(Float64,2,2) for i=1:total_spikes(myrate,inds,n)]
+    xy=[zeros(Float64,2,2) for i=1:total_spikes(myrate,inds,ts,n)]
     @inbounds for i in inds
         mycenter=myrate.spikes[n].center[i,1] 
-        for j=1:length(myrate.spikes[n].trials[i].inds)
-            mytimes=myrate.spikes[n].ts[myrate.spikes[n].trials[i].inds[j]]-mycenter
-            xy[myspikes][1,1]=mytimes
-            xy[myspikes][1,2]=mycount
-            xy[myspikes][2,1]=mytimes
-            xy[myspikes][2,2]=mycount+1.0
-            myspikes+=1
+        for j in myrate.spikes[n].trials[i].inds
+            if myrate.spikes[n].ts[j]-mycenter > ts[end]
+                break
+            elseif myrate.spikes[n].ts[j] - mycenter > ts[1]
+                xy[myspikes][1,1]=myrate.spikes[n].ts[j]-mycenter
+                xy[myspikes][1,2]=mycount
+                xy[myspikes][2,1]=myrate.spikes[n].ts[j]-mycenter
+                xy[myspikes][2,2]=mycount+1.0
+                myspikes+=1
+            end
         end
         mycount+=1.0
     end
@@ -345,7 +375,7 @@ function plot_psth(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int
 
     psth=rate_event(myrate,inds,ts,n)
 
-    ylimit=ceil(Int64,maximum(psth)/10)*10
+    ylimit=round(Int64,maximum(psth)/10)*10
     ax[:set_yticks]([0, ylimit])
     ax[:set_yticklabels]([0,ylimit],size=6)
     ax[:set_ylabel]("Rate (spikes/s)", size=6)
@@ -368,6 +398,12 @@ function plot_psth_raster(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1}
     plot_raster(myrate,inds,ts,n,ax[2,1])
     ax[2,1][:set_xlabel]("Time (s)", size=8)
     (fig,ax)
+end
+
+function plot_psth_raster(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int64,ax_x::Int64,ax_y::Int64,ax)
+    plot_psth(myrate,ts,inds,n,ax[ax_x,ax_y])
+    plot_raster(myrate,inds,ts,n,ax[ax_x+1,ax_y])
+    nothing
 end
 
 function plot_raster_psth(myrate::rate,ts::FloatRange{Float64},inds::Array{Int64,1},n::Int64)
