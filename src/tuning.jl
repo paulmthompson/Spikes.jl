@@ -1,5 +1,5 @@
 
-export vec_bs
+export vec_bs, spike_count_win
 
 #Spike Counts 
 
@@ -8,6 +8,24 @@ function spike_count_win(rate::SpikeTrain,t1::Float64,t2::Float64,out=zeros(Int6
     @inbounds for i=1:length(out)       
         mycent=rate.center[i,1]
         for j in rate.trials[i].inds
+            if rate.ts[j]-mycent > t1
+                if rate.ts[j]-mycent < t2
+                    out[i]+=1
+                end
+            elseif rate.ts[j]-mycent > t2
+                break
+            end
+        end
+    end
+    
+    out
+end
+
+function spike_count_win_ind(rate::SpikeTrain,t1::Float64,t2::Float64,inds::Array{Int64,1},out=zeros(Int64,length(inds)))
+
+    @inbounds for i=1:length(out)       
+        mycent=rate.center[inds[i],1]
+        for j in rate.trials[inds[i]].inds
             if rate.ts[j]-mycent > t1
                 if rate.ts[j]-mycent < t2
                     out[i]+=1
@@ -46,6 +64,8 @@ function spike_count_win(rate::SpikeTrain,ts::Array{Float64,1},out=zeros(Int64,l
     end
     out
 end
+
+
 
 
 #=
