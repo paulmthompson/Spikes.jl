@@ -16,11 +16,11 @@ type SpikeTrain
     center::Array{Float64,2}
 end
 
-function SpikeTrain(spikes::Array{Float64,1},times::Array{Any,2})
+function SpikeTrain(spikes::Array{Float64,1},times)
     SpikeTrain(spikes,Array(event,size(times,2)),Array(Float64,size(times,2),0))
 end
 
-function findspikes(spikes::Array{Array{Float64,1},1},times::Array{Any,2},win::Float64)
+function findspikes(spikes::Array{Array{Float64,1},1},times,win::Float64)
     
     myspikes=Array(SpikeTrain,length(spikes))
     for i=1:length(spikes)
@@ -32,7 +32,7 @@ function findspikes(spikes::Array{Array{Float64,1},1},times::Array{Any,2},win::F
     myspikes 
 end
 
-function findspikes(spikes::Array{Float64,2},times::Array{Any,2},win::Float64)
+function findspikes(spikes::Array{Float64,2},times,win::Float64)
 
     spikenums=view(spikes,:,2)
 
@@ -53,7 +53,7 @@ function findspikes(spikes::Array{Float64,2},times::Array{Any,2},win::Float64)
     myspikes  
 end
 
-function addevent!(spikes::Array{SpikeTrain,1},times::Array{Any,2},win::Float64)
+function addevent!(spikes::Array{SpikeTrain,1},times,win::Float64)
     
     for i=1:length(spikes)
         first=searchsortedfirst(spikes[i].ts,times[1][1])-1

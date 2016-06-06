@@ -21,6 +21,23 @@ function spike_count_win(rate::SpikeTrain,t1::Float64,t2::Float64,out=zeros(Int6
     out
 end
 
+function spike_count_win(rate::SpikeTrain,t1::Array{Float64,1},t2::Array{Float64,1},out=zeros(Int64,length(rate.trials)))
+
+    @inbounds for i=1:length(out)       
+        for j in rate.trials[i].inds
+            if rate.ts[j] > t1[i]
+                if rate.ts[j] < t2[i]
+                    out[i]+=1
+                end
+            elseif rate.ts[j] > t2[i]
+                break
+            end
+        end
+    end
+    
+    out
+end
+
 function spike_count_win_ind(rate::SpikeTrain,t1::Float64,t2::Float64,inds::Array{Int64,1},out=zeros(Int64,length(inds)))
 
     @inbounds for i=1:length(out)       
