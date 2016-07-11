@@ -1,11 +1,12 @@
 
 module Spikes
 
-using MAT, PyPlot, HDF5, ArrayViews, Images, DimensionalityReduction, StatsBase, PyCall, HypothesisTests
+using MAT, PyPlot, HDF5, ArrayViews, Images, DimensionalityReduction, StatsBase, PyCall, HypothesisTests, Distributions
 
 @pyimport matplotlib.collections as C
 
 include("types.jl")
+include("stats.jl")
 include("rates.jl")
 include("tuning.jl")
 include("dimensionreduce.jl")
