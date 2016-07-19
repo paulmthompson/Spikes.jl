@@ -1,5 +1,5 @@
 
-export anova, anova2
+export anova, anova2, anova_repeated, circ_anova
 
 function anova(x,alpha=.05)
     
@@ -131,4 +131,121 @@ function anova2(x,a,b)
     pab=ccdf(mydab,F_ab)
     
     (pa,pb,pab)
+end
+
+function anova_repeated(x)
+    
+    means=mean(x,1) 
+    
+    g_mean=mean(x)
+    
+    ss_b=0.0
+    
+    for i=1:size(x,2)
+        ss_b+=(means[i]-g_mean)^2
+    end
+    
+    ss_b*=size(x,1)
+    
+    ss_w=0.0
+    
+    for i=1:size(x,2)
+        for j=1:size(x,1)
+            ss_w+=(x[j,i]-means[i])^2
+        end
+    end
+    
+    means_s=mean(x,2)
+    ss_s=0.0
+    
+    for i=1:size(x,1)
+        ss_s+=(means_s[i]-g_mean)^2
+    end
+    
+    ss_s*=size(x,2)
+    
+    ss_e=ss_w-ss_s
+    
+    us_b=ss_b/(size(x,2)-1)
+    
+    us_e=ss_e/((size(x,1)-1)*(size(x,2)-1))
+    
+    F=us_b/us_e
+    
+    myd=FDist(size(x,2-1),size(x,1)-1)
+    
+    
+    ccdf(myd,F)
+end
+
+function circ_anova(x,alpha=.05)
+    
+    A=zeros(Complex,size(x))
+    
+    for i=1:length(x)
+        A[i] = exp(im*x[i])
+    end
+    
+    R = abs(mean(A))    
+    N=length(A)
+    mu = angle(mean(A))
+    
+    #Group means
+    Ri=abs(mean(A,1))
+
+    #Group concentrations
+    ki=zeros(Float64,size(A,2))
+    for i = 1:size(A,2)
+        ki[i] = Concentration(A[:,i],Ri[i])
+    end
+    
+    SSw=N
+    for i=1:size(A,2)
+        SSw -= size(A,1)*Ri[i]
+    end
+    SSb = 0.0
+    for i=1:size(A,2)
+        SSb += size(A,1)*Ri[i]
+    end
+    SSb -= N*R
+
+    F = (N-size(A,2))/(size(A,2)-1)*SSb/SSw
+    k=sum([size(A,1)*ki[i] for i=1:size(A,2)])/N
+    if 2 < k && k < 10
+        #Improve X² approximation for moderate concentration (Stephens, 1969)
+        F = F * (1+3/(8*k))
+    end
+    
+    myd=FDist(size(A,2)-1,N-size(A,2))
+    
+    p=ccdf(myd,F)
+    sig=false
+    if p<alpha
+        sig=true
+    end
+
+    (sig,p)
+end
+
+function Concentration(A,r_bar)
+    
+    n=length(A)
+    
+    if r_bar < 0.53
+        kappa = 2*r_bar+r_bar^3+5*r_bar^5/6
+    elseif r_bar < 0.85
+        kappa = -0.4+1.39*r_bar+0.43/(1-r_bar)
+    else
+        kappa = 1/(r_bar^3-4*r_bar^2+3*r_bar)
+    end
+
+    #Correction for small samples
+    if n <= 15
+        if kappa < 2
+            kappa = max([kappa-2/(n*kappa); 0.0])
+        else
+            kappa = (n-1)^3*kappa/(n^3+n)
+        end
+    end
+    kappa
 end
