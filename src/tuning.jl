@@ -91,14 +91,25 @@ Modulation Index
 Vector Method
 =#
 
+function vec_bs(rate::SpikeTrain,t1::Array{Float64,1},t2::Array{Float64,1},cons::Array{Int64,1},t_trials::Dict{Int64,Int64},t_dir::Array{Float64,1},inds::Array{Int64,1})
+    myvec1=spike_count_win(rate,t1,t2)
+
+    vec_bs(myvec1,cons,t_trials,t_dir,inds)
+end
+
 function vec_bs(rate::SpikeTrain,t1::Float64,t2::Float64,cons::Array{Int64,1},t_trials::Dict{Int64,Int64},t_dir::Array{Float64,1},inds::Array{Int64,1})
     # cons - trial type identifier for each trial of interest
     # t_trials - Maps trial type identifier to index in dictionary
     # t_dir - angle for each trial type
     # inds - maps index of t_types to index of s (first trial of interest (index 1 in t_types) may be the 4th absolute trial, so inds[1]=4)
-    
+
     myvec1=spike_count_win(rate,t1,t2)
     
+    vec_bs(myvec1,cons,t_trials,t_dir,inds)
+end
+
+function vec_bs{T}(myvec1::Array{T,1},cons::Array{Int64,1},t_trials::Dict{Int64,Int64},t_dir::Array{Float64,1},inds::Array{Int64,1})
+
     mv1=PD_vec(myvec1,cons,t_dir,t_trials,inds)
     
     miss=0.0
@@ -114,8 +125,7 @@ function vec_bs(rate::SpikeTrain,t1::Float64,t2::Float64,cons::Array{Int64,1},t_
     miss/1000
 end
 
-
-function PD_vec(s::Array{Int64,1},cons::Array{Int64,1},t_dir::Array{Float64,1},t_trials::Dict{Int64,Int64},inds::Array{Int64,1})
+function PD_vec{T}(s::Array{T,1},cons::Array{Int64,1},t_dir::Array{Float64,1},t_trials::Dict{Int64,Int64},inds::Array{Int64,1})
     # s - Spike counts per trial
     # cons - condition identifier for each trial of interest
     # t_dir - angle for each trial type
