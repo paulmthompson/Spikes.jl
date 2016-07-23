@@ -53,6 +53,28 @@ function findspikes(spikes::Array{Float64,2},times,win::Float64)
     myspikes  
 end
 
+function findspikes(spikes::Array{Float64,2},times,win::Float64,cell_id)
+
+    spikenums=view(spikes,:,2)
+
+    cells=unique(spikenums)
+    cells=cells[2:end]
+    myspikes=Array(SpikeTrain,length(cells))
+    count=1
+    firstind=1
+    for i in cells
+        lastind=searchsortedfirst(spikenums,i)
+        myspikes[count]=SpikeTrain(spikes[firstind:(lastind-1),1],times)
+        count+=1
+        firstind=lastind
+    end
+
+    addevent!(myspikes,times,win)
+
+    (myspikes,[cell_id[round(Int64,i)] for i in cells])  
+end
+
+
 function addevent!(spikes::Array{SpikeTrain,1},times,win::Float64)
     
     for i=1:length(spikes)
