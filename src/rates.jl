@@ -21,17 +21,17 @@ function rate_window(myrate::rate_bin,ind::Int64,ts::Array{Float64,1},n::Int64)
 end
 
 function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::FloatRange{Float64},n::Int64)
-    collect_ts(myrate,inds,ts,n)./myrate.binsize
+    collect_ts(myrate,inds,ts,n)./(ts.step/ts.divisor)
 end
 
 function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64)
-    collect_ts(myrate,inds,ts,n)./myrate.binsize
+    collect_ts(myrate,inds,ts,n)./(ts[2]-ts[1])
 end
 
 function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64,output::Array{Float64,1})
     collect_ts(myrate,inds,ts,n,output)
     @inbounds for i=1:length(output)
-        output[i]=output[i]/myrate.binsize
+        output[i]=output[i]/(ts[i+1]-ts[i])
     end
     nothing
 end
@@ -323,6 +323,32 @@ Plotting
 Raster
 =#
 
+function plot_raster(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64,ax; event_ts=zeros(Float64,0))
+
+    plot_raster(myrate,inds,ts,n,ax)
+
+    if length(event_ts)>0
+
+        xy=[zeros(Float64,2,2) for i=1:(size(event_ts,2)*length(inds))]
+            
+        mycount=1.0
+        myinds=1
+        for i in inds
+            for j=1:size(event_ts,2)
+                xy[myinds][1,1]=event_ts[i]-.015
+                xy[myinds][1,2]=mycount+.5
+                xy[myinds][2,1]=event_ts[i]+.015
+                xy[myinds][2,2]=mycount+.5
+                myinds+=1
+            end
+            mycount+=1.0
+        end
+        c2=C.LineCollection(xy,color="black",linewidth=2.0)
+        ax[:add_collection](c2)
+    end
+    nothing
+end
+
 function plot_raster(myrate::rate,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64,ax)
 
     mycount=1.0
@@ -400,9 +426,9 @@ function plot_psth_raster(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1}
     (fig,ax)
 end
 
-function plot_psth_raster(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int64,ax_x::Int64,ax_y::Int64,ax)
+function plot_psth_raster(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int64,ax_x::Int64,ax_y::Int64,ax;event_ts=zeros(Float64,0))
     plot_psth(myrate,ts,inds,n,ax[ax_x,ax_y])
-    plot_raster(myrate,inds,ts,n,ax[ax_x+1,ax_y])
+    plot_raster(myrate,inds,ts,n,ax[ax_x+1,ax_y],event_ts=event_ts)
     nothing
 end
 

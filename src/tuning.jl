@@ -158,4 +158,31 @@ function PD_vec{T}(s::Array{T,1},cons::Array{Int64,1},t_dir::Array{Float64,1},t_
     sqrt(x*x+y*y)
 end
 
+function mod_bs(rate::SpikeTrain,t1::Float64,t2::Float64,cons::Array{Int64,1},t_trials::Dict{Int64,Int64},t_dir::Array{Float64,1},inds::Array{Int64,1})
 
+    myvec1=spike_count_win(rate,t1,t2)
+    mod_bs(myvec1,cons,t_trials,t_dir,inds)
+end
+
+function mod_bs{T}(myvec1::Array{T,1},cons::Array{Int64,1},t_trials::Dict{Int64,Int64},t_dir::Array{Float64,1},inds::Array{Int64,1})
+
+    mv1=PD_mod(s,cons,t_trials,t_dir,inds)
+
+    miss=0.0
+    for i=1:1000
+        cons2=deepcopy(cons)
+        shuffle!(cons2)    
+        mv2=PD_mod(myvec1,cons2,t_trials,t_dir,inds)
+        if mv2>mv1
+            miss+=1.0
+        end
+    end
+    
+    miss/1000
+end
+
+function PD_mod{T}(s::Array{T,2},cons::Array{Int64,1},t_trials::Dict{Int64,Int64},t_dir::Array{Float64,1},inds::Array{Int64,1})
+
+    
+
+end
