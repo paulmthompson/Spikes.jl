@@ -1,7 +1,7 @@
 
 module Spikes
 
-using MAT, PyPlot, HDF5, ArrayViews, Images, StatsBase, PyCall, HypothesisTests, Distributions
+using MAT, PyPlot, HDF5, Images, StatsBase, PyCall, HypothesisTests, Distributions
 
 @pyimport matplotlib.collections as C
 

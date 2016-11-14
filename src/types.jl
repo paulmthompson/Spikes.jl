@@ -1,5 +1,5 @@
 
-export SpikeTrain, findspikes, addevent!, addcenter!, rate_bin, rate_KD, Kinematic
+export SpikeTrain, findspikes, addevent!, rate_bin, rate_KD, Kinematic
 
 #=
 Main data container of timestamps and trial data
@@ -8,96 +8,89 @@ Main data container of timestamps and trial data
 immutable event
     inds::UnitRange{Int64}
     time::Float64
+    id::UInt8
+    trial::UInt16
 end
 
 type SpikeTrain
     ts::Array{Float64,1}
     trials::Array{event,1}
-    center::Array{Float64,2}
 end
 
-function SpikeTrain(spikes::Array{Float64,1},times)
-    SpikeTrain(spikes,Array(event,size(times,2)),Array(Float64,size(times,2),0))
+function SpikeTrain(spikes::Array{Float64,1})
+    SpikeTrain(spikes,Array(event,0))
 end
 
-function findspikes(spikes::Array{Array{Float64,1},1},times,win::Float64)
-    
+#=
+Array of spike trains coming from Array of array of time stamps
+=#
+function SpikeTrain(spikes::Array{Array{Float64,1},1})
     myspikes=Array(SpikeTrain,length(spikes))
     for i=1:length(spikes)
         myspikes[i]=SpikeTrain(spikes[i][:],times)
-    end    
-    
-    addevent!(myspikes,times,win)
-
-    myspikes 
+    end  
+    myspikes
 end
 
-function findspikes(spikes::Array{Float64,2},times,win::Float64)
+#=
+Array of spike trains created from 2D array with time stamp in column 1
+and neuron ID in column 2
+=#
+function SpikeTrain(spikes::Array{Float64,2})
 
     spikenums=view(spikes,:,2)
 
     cells=unique(spikenums)
-    cells=cells[2:end]
+    cells=cells[2:end] #Why is this being done?
     myspikes=Array(SpikeTrain,length(cells))
     count=1
     firstind=1
     for i in cells
         lastind=searchsortedfirst(spikenums,i)
-        myspikes[count]=SpikeTrain(spikes[firstind:(lastind-1),1],times)
+        myspikes[count]=SpikeTrain(spikes[firstind:(lastind-1),1])
         count+=1
         firstind=lastind
     end
-
-    addevent!(myspikes,times,win)
-
-    myspikes  
+    myspikes
 end
 
-function findspikes(spikes::Array{Float64,2},times,win::Float64,cell_id)
+#=
+Add events with events being an array of trials, with array of time stamps for each trial
+=#
 
-    spikenums=view(spikes,:,2)
+function addevent!(spikes::Array{SpikeTrain,1},times::Array{Array{Float64,1},1},win::Float64)
 
-    cells=unique(spikenums)
-    cells=cells[2:end]
-    myspikes=Array(SpikeTrain,length(cells))
-    count=1
-    firstind=1
-    for i in cells
-        lastind=searchsortedfirst(spikenums,i)
-        myspikes[count]=SpikeTrain(spikes[firstind:(lastind-1),1],times)
-        count+=1
-        firstind=lastind
-    end
-
-    addevent!(myspikes,times,win)
-
-    (myspikes,[cell_id[round(Int64,i)] for i in cells])  
-end
-
-
-function addevent!(spikes::Array{SpikeTrain,1},times,win::Float64)
-    
     for i=1:length(spikes)
-        first=searchsortedfirst(spikes[i].ts,times[1][1])-1
-        mysize=length(spikes[i].ts)
-        if first<mysize
-            for j=1:size(times,2)
-                first=searchsortedfirst(spikes[i].ts,(times[j][1]-win),first,mysize,Base.Forward)
-                last=searchsortedfirst(spikes[i].ts, (times[j][end]+win),first,mysize,Base.Forward)-1
-                spikes[i].trials[j]=Spikes.event(first:last,times[j][1])
+        addevent!(spikes[i],times,win)
+    end
+    nothing
+end
+
+function addevent!(spikes::SpikeTrain,times::Array{Array{Float64,1},1},win::Float64)
+
+    mysize=length(spikes.ts)
+    first=searchsortedfirst(spikes.ts,times[1][1])-1
+    
+    if first<mysize
+        for i=1:length(times)
+            for j=1:length(times[i])
+            
+                first=searchsortedfirst(spikes.ts,(times[i][j]-win),first,mysize,Base.Forward)
+                last=searchsortedfirst(spikes.ts, (times[i][j]+win),first,mysize,Base.Forward)-1
+
+                push!(spikes.trials,event(first:last,times[i][j],j,i))       
             end
         end
     end
     nothing
 end
 
-function addcenter!(spikes::Array{SpikeTrain,1},center::Array{Float64,1})
-      
-    for i=1:length(spikes)
-        spikes[i].center=hcat(spikes[i].center,center)
-    end
-    nothing
-end
+#=
+Get cell ID
+
+(myspikes,[cell_id[round(Int64,i)] for i in cells])  
+
+=#
 
 #=
 Rate Types

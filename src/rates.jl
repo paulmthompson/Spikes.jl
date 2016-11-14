@@ -4,25 +4,68 @@ export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop
 
 
 #=
-Histogram Methods
-
+Temporal rate for entire experimental session
 =#
 
-function rate_session(myrate::rate_bin,n::Int64)
-    hist(myrate.spikes[n].ts,collect(myrate.spikes[n].trials[1].time:myrate.binsize:myrate.spikes[n].trials[end].time))[2]./myrate.binsize
+rate_session(myrate::rate_bin,n::Int64)=rate_session_(myrate.spikes[n],myrate.binsize)
+
+function rate_session_(spikes::SpikeTrain,binsize::Float64)
+    hist(spikes.ts,collect(spikes.trials[1].time:binsize:spikes.trials[end].time))[2]
 end
 
-function rate_window(myrate::rate_bin,ind::Int64,ts::FloatRange{Float64},n::Int64)
+#=
+Temporal rate within time window
+=#
+
+function spike_count_win(rate::SpikeTrain,t1::Float64,t2::Float64)
+
+    @inbounds for i=1:length(out)       
+        mycent=rate.center[i,1]
+        for j in rate.trials[i].inds
+            if rate.ts[j]-mycent > t1
+                if rate.ts[j]-mycent < t2
+                    out[i]+=1
+                end
+            elseif rate.ts[j]-mycent > t2
+                break
+            end
+        end
+    end
+    
+    out
+end
+
+#=
+Mean rate within window
+=#
+
+#=
+Trial-averaged rate within window
+=#
+
+#=
+Trial-averaged temporal rate within window
+=#
+
+rate_window(myrate::rate_bin,event_id::Int,ts,n::Int64)=rate_window(myrate.spikes[n],event_id,ts,myrate.binsize)
+
+function rate_window(spikes::SpikeTrain,event_id::Int,ts,binsize::Float64)
     spikehist(myrate,ind,ts,n)./myrate.binsize
 end
 
-function rate_window(myrate::rate_bin,ind::Int64,ts::Array{Float64,1},n::Int64)
-    spikehist(myrate,ind,ts,n)./myrate.binsize
+function spikehist(myrate::rate,ind::Int64,ts::FloatRange{Float64},n::Int64)
+    hist(myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],ts[1]:myrate.binsize:ts[end])[2]
+end
+
+function spikehist(myrate::rate,ind::Int64,ts::Array{Float64,1},n::Int64)
+    hist(myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],ts)[2]
 end
 
 function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::FloatRange{Float64},n::Int64)
     collect_ts(myrate,inds,ts,n)./(ts.step/ts.divisor)
 end
+
+
 
 function rate_event(myrate::rate_bin,inds::Array{Int64,1},ts::Array{Float64,1},n::Int64)
     collect_ts(myrate,inds,ts,n)./(ts[2]-ts[1])
