@@ -1,5 +1,5 @@
 
-export SpikeTrain, findspikes, addevent!, rate_bin, rate_KD, Kinematic
+export SpikeTrain, addevent!, rate_bin, rate_KD, Kinematic
 
 #=
 Main data container of timestamps and trial data
@@ -93,9 +93,7 @@ end
 
 #=
 Get cell ID
-
 (myspikes,[cell_id[round(Int64,i)] for i in cells])  
-
 =#
 
 #=

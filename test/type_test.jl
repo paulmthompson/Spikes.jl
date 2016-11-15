@@ -40,4 +40,19 @@ facts() do
     end
 end
 
+#add events
+mytimes=[sort(rand(Float64,5)+i) for i=10.0:2.0:1000.0]
+addevent!(my_spike_trains,mytimes,3.0)
+
+facts() do
+
+    for i=1:5
+        @fact length(my_spike_trains[i].trials) --> 496 * 5
+    end
+
+    @fact my_spike_trains[1].trials[1].time --> less_than(my_spike_trains[1].trials[2].time)
+    @fact my_spike_trains[1].trials[2].time --> less_than(my_spike_trains[1].trials[end].time)
+    
+end
+
 end
