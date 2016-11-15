@@ -18,7 +18,7 @@ type SpikeTrain
 end
 
 function SpikeTrain(spikes::Array{Float64,1})
-    SpikeTrain(spikes,Array(event,0))
+    SpikeTrain(sort(spikes),Array(event,0))
 end
 
 #=
@@ -27,7 +27,7 @@ Array of spike trains coming from Array of array of time stamps
 function SpikeTrain(spikes::Array{Array{Float64,1},1})
     myspikes=Array(SpikeTrain,length(spikes))
     for i=1:length(spikes)
-        myspikes[i]=SpikeTrain(spikes[i][:],times)
+        myspikes[i]=SpikeTrain(spikes[i])
     end  
     myspikes
 end
@@ -38,20 +38,26 @@ and neuron ID in column 2
 =#
 function SpikeTrain(spikes::Array{Float64,2})
 
-    spikenums=view(spikes,:,2)
+    cells=unique(view(spikes,:,2))
 
-    cells=unique(spikenums)
-    cells=cells[2:end] #Why is this being done?
-    myspikes=Array(SpikeTrain,length(cells))
-    count=1
-    firstind=1
-    for i in cells
-        lastind=searchsortedfirst(spikenums,i)
-        myspikes[count]=SpikeTrain(spikes[firstind:(lastind-1),1])
-        count+=1
-        firstind=lastind
+    myspikes=[zeros(Float64,0) for i=1:length(cells)]
+
+    myind=1
+
+    for i=1:size(spikes,1)
+
+        for j=1:length(cells)
+            if cells[j] == spikes[i,2]
+                myind=j
+                break
+            end
+        end
+
+        push!(myspikes[myind],spikes[i,1])
+
     end
-    myspikes
+
+    SpikeTrain(myspikes)
 end
 
 #=
