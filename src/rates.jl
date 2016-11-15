@@ -4,6 +4,38 @@ export rate_session, ses_mean, ses_std, rate_event, rate_window, rate_window_pop
 
 
 #=
+Spike count in window
+=#
+
+function spike_count_window(st::SpikeTrain,t1::Float64,t2::Float64,mystart=1)
+    out=0
+
+    @inbounds for i=mystart:length(st.ts)
+        if st.ts[i]>t1
+            if st.ts[i]<t2
+                out+=1
+            else
+                break
+            end
+        end
+    end
+    out
+end
+
+function get_window(st::SpikeTrain,t1::Float64,t2::Float64)
+
+    out=1
+    @inbounds for i=1:length(st.trials)
+        if st.trials[i].time>t1        
+            break
+        else
+            out=st.trials[i].inds.start
+        end
+    end
+    spike_count_window(st,t1,t2,out)
+end
+
+#=
 Temporal rate for entire experimental session
 =#
 
