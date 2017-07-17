@@ -408,7 +408,7 @@ function plot_psth(myrate::rate,ts::Array{Float64,1},inds::Array{Int64,1},n::Int
 
     ax[:set_xticks]([])
     ax[:set_xticklabels]([])
-    ax[:bar](2:length(ts),psth,color="black")
+    ax[:bar](2:length(ts),psth,width = 1.0, color="black")
     ax[:set_ylim]([0, ylimit])
     nothing
 end
