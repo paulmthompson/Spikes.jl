@@ -23,7 +23,7 @@ end
 
 function spike_count_win(rate::SpikeTrain,t1::Array{Float64,1},t2::Array{Float64,1},out=zeros(Float64,length(rate.trials)))
 
-    @inbounds for i=1:length(out)       
+    for i=1:length(out)       
         for j in rate.trials[i].inds
             if rate.ts[j] > t1[i]
                 if rate.ts[j] < t2[i]

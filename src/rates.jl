@@ -9,7 +9,9 @@ Histogram Methods
 =#
 
 function rate_session(myrate::rate_bin,n::Int64)
-    hist(myrate.spikes[n].ts,collect(myrate.spikes[n].trials[1].time:myrate.binsize:myrate.spikes[n].trials[end].time))[2]./myrate.binsize
+    #hist(myrate.spikes[n].ts,collect(myrate.spikes[n].trials[1].time:myrate.binsize:myrate.spikes[n].trials[end].time))[2]./myrate.binsize
+h=fit(Histogram,myrate.spikes[n].ts,collect(myrate.spikes[n].trials[1].time:myrate.binsize:myrate.spikes[n].trials[end].time))
+h.weights ./ myrate.binsize
 end
 
 function rate_window(myrate::rate_bin,ind::Int64,ts::FloatRange{Float64},n::Int64)
@@ -191,7 +193,9 @@ function rate_trials(myrate::rate,inds::Array{Int64,1},time::FloatRange{Float64}
 end
 
 function spikehist(myrate::rate,ind::Int64,ts::FloatRange{Float64},n::Int64)
-    hist(myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],ts[1]:myrate.binsize:ts[end])[2]
+	 h=fit(Histogram,myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],ts[1]:myrate.binsize:ts[end])
+    #hist(myrate.spikes[n].ts[myrate.spikes[n].trials[ind].inds]-myrate.spikes[n].center[ind,1],ts[1]:myrate.binsize:ts[end])[2]
+h.weights
 end
 
 function spikehist(myrate::rate,ind::Int64,ts::Array{Float64,1},n::Int64)
